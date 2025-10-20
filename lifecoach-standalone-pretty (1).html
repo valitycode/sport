@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LifeCoach — Coach de vie</title>
+  <style>
+    /* ======================== THEME & TOKENS ======================== */
+    /* Light theme (default) */
+    :root{
+      --bg: #f6f7fb;
+      --bg-2:#eef1f8;
+      --fg: #0f172a;
+      --muted: #64748b;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --shadow: 0 10px 25px rgba(2,8,23,.06);
+      --accent: #2563eb;
+      --accent-2:#7c3aed;
+      --radius: 16px;
+      --radius-sm: 12px;
+      --glass: rgba(255,255,255,0.65);
+      --ring: 0 0 0 4px rgba(37, 99, 235, .15);
+      --brand-grad: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color-scheme: light;
+    }
+    /* Dark theme overrides when html[data-theme="dark"] */
+    html[data-theme="dark"]{
+      --bg: #0b1220;
+      --bg-2:#0e172a;
+      --fg: #e5e7eb;
+      --muted: #9ca3af;
+      --card: #0f172a;
+      --border: #1f2937;
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+      --glass: rgba(17,24,39,0.6);
+      --ring: 0 0 0 4px rgba(124,58,237,.18);
+      color-scheme: dark;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--fg);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, var(--bg-2), transparent 50%),
+        radial-gradient(800px 400px at 90% 10%, var(--bg-2), transparent 50%),
+        var(--bg);
+      background-attachment: fixed;
+      line-height: 1.35;
+    }
+
+    /* ======================== LAYOUT ======================== */
+    .container{max-width:1120px;margin:0 auto;padding:20px}
+    header.sticky{
+      position:sticky; top:0; z-index:20;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      background: var(--glass);
+      border-bottom: 1px solid var(--border);
+    }
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .logo{
+      width:44px; height:44px; border-radius:14px;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:900; letter-spacing:0.5px;
+      background: var(--brand-grad);
+      box-shadow: inset 0 -2px 8px rgba(255,255,255,.25), inset 0 8px 18px rgba(0,0,0,.12);
+    }
+    .headline{font-weight:800; font-size:20px; letter-spacing:.2px}
+
+    /* ======================== CARDS & ELEMENTS ======================== */
+    .row{display:flex;gap:14px;flex-wrap:wrap}
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .card:hover{ transform: translateY(-1px); box-shadow: 0 14px 34px rgba(2,8,23,.10) }
+    .soft{ background: linear-gradient(180deg, rgba(255,255,255,.05), transparent); }
+    .title{ margin:0 0 10px 0; font-weight:700; font-size: 18px }
+    .muted{ color: var(--muted); font-size: 12px }
+    .stat{ font-weight:800; font-size:28px }
+
+    /* Inputs */
+    .input, select, textarea{
+      width:100%; padding:12px 12px; border-radius:12px;
+      border:1px solid var(--border); background: transparent; color: var(--fg);
+      transition: border-color .15s ease, box-shadow .15s ease;
+      outline: none;
+    }
+    .input:focus, select:focus, textarea:focus{ border-color: var(--accent); box-shadow: var(--ring) }
+    label{ display:block; font-size:12px; color: var(--muted); margin: 6px 0 6px }
+
+    /* Buttons */
+    .btn{ padding:10px 14px; border-radius:12px; border:1px solid transparent; cursor:pointer; font-weight:600 }
+    .btn:active{ transform: translateY(1px) }
+    .btn-primary{ color:#fff; background: var(--brand-grad); box-shadow: var(--shadow) }
+    .btn-primary:hover{ filter: brightness(1.03) }
+    .btn-ghost{ background: transparent; color: var(--fg); border-color: var(--border) }
+    .btn-ghost:hover{ border-color: var(--accent) }
+
+    /* Tabs */
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap }
+    .tab{ padding:8px 12px; border-radius:999px; border:1px solid var(--border); background:transparent; cursor:pointer; }
+    .tab.active{ background: var(--brand-grad); color:#fff; border-color: transparent; }
+
+    /* Grids */
+    .grid-cards{ display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:14px }
+    .grid-two{ display:grid; grid-template-columns: 2fr 1fr; gap:14px }
+    .grid-responsive{ display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:14px }
+    @media (max-width: 860px){ .grid-two{ grid-template-columns: 1fr } }
+
+    /* Items */
+    .event{ display:flex; justify-content:space-between; align-items:center; border:1px dashed var(--border); border-radius:12px; padding:10px 12px }
+    .chip{ display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border) }
+    .list{ display:flex; flex-direction:column; gap:10px }
+
+    /* Micro animations */
+    @keyframes in { from{opacity:0; transform: translateY(6px)} to{opacity:1; transform:none} }
+    .fade-in{ animation: in .25s ease both }
+
+    /* Theme toggle */
+    .theme-toggle{ display:flex; align-items:center; gap:8px }
+    .switch{ width:46px; height:26px; border-radius:999px; background: var(--border); position:relative; border:1px solid var(--border); cursor:pointer }
+    .knob{ position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s ease }
+    .switch.on{ background: var(--accent) }
+    .switch.on .knob{ left:24px }
+  </style>
+</head>
+<body>
+  <header class="sticky">
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;">
+      <div class="brand">
+        <div class="logo">LC</div>
+        <div>
+          <div class="headline">LifeCoach</div>
+          <div class="muted">Votre tableau de bord bien-être</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div class="theme-toggle">
+          <span class="muted">Thème</span>
+          <div id="themeSwitch" class="switch"><div class="knob"></div></div>
+        </div>
+        <div id="header-actions"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container fade-in" style="margin-top:18px">
+    <div id="root"></div>
+  </main>
+
+  <!-- React + ReactDOM (UMD) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Dexie -->
+  <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+
+  <script>
+  (function(){
+    const { useState, useEffect, useMemo } = React;
+
+    // ================= THEME TOGGLE =================
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    function applyTheme(mode){
+      const html = document.documentElement;
+      if(mode === 'dark') html.setAttribute('data-theme','dark');
+      else if(mode === 'light') html.setAttribute('data-theme','light');
+      else html.setAttribute('data-theme', prefersDark ? 'dark' : 'light'); // auto
+    }
+    function initThemeSwitch(){
+      const saved = localStorage.getItem('lifecoach.theme') || 'auto';
+      applyTheme(saved);
+      const sw = document.getElementById('themeSwitch');
+      const currentIsDark = (saved === 'dark') || (saved === 'auto' && prefersDark);
+      if(currentIsDark) sw.classList.add('on');
+      sw.onclick = () => {
+        const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        const next = cur === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('lifecoach.theme', next);
+        applyTheme(next);
+        sw.classList.toggle('on');
+      };
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initThemeSwitch);
+    else initThemeSwitch();
+
+    // ============== DB ==============
+    class LifeCoachDB extends Dexie {
+      constructor(){
+        super("LifeCoachDB_cdn_pretty_fix");
+        this.version(1).stores({
+          users: "++id, email",
+          meals: "++id, userId, date",
+          waters: "++id, userId, date",
+          events: "++id, userId, date",
+        });
+        this.users = this.table("users");
+        this.meals = this.table("meals");
+        this.waters = this.table("waters");
+        this.events = this.table("events");
+      }
+    }
+    const db = new LifeCoachDB();
+
+    // ============== Helpers ==============
+    const todayISO = new Date().toISOString().slice(0,10);
+    async function sha256(text){
+      const enc = new TextEncoder().encode(text);
+      const buf = await crypto.subtle.digest("SHA-256", enc);
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+    }
+    const FOOD_DB = {
+      "Pomme":52,"Banane":89,"Riz_cuit":130,"Poulet_grillé":165,"Saumon":208,"Oeuf":155,
+      "Pain_blanc":265,"Avoine":389,"Brocoli":34,"Yaourt_nature":61,"Fromage_blanc":98,
+      "Pâtes_cuites":131,"Patate_douce":86,"Amandes":579,"Beurre_de_cacahuète":588
+    };
+    function suggestWorkouts({age, heightCm, objective}){
+      let level = "débutant";
+      if (age <= 35) level = "intermédiaire";
+      if (age <= 30 && heightCm >= 175) level = "avancé";
+      const lib = {
+        fullbody: [
+          { name:"Squats", reps: level==="avancé" ? "4×12" : level==="intermédiaire" ? "3×12" : "3×10" },
+          { name:"Pompes", reps: level==="avancé" ? "4×15" : level==="intermédiaire" ? "3×12" : "3×8" },
+          { name:"Fentes", reps: level==="avancé" ? "4×12/jambe" : level==="intermédiaire" ? "3×10/jambe" : "2×10/jambe" },
+          { name:"Gainage", reps: level==="avancé" ? "4×60s" : level==="intermédiaire" ? "3×45s" : "3×30s" }
+        ],
+        force: [
+          { name:"Soulevé de terre léger", reps: level==="avancé" ? "5×5" : level==="intermédiaire" ? "4×6" : "3×6" },
+          { name:"Développé couché / pompes lestées", reps: level==="avancé" ? "5×5" : level==="intermédiaire" ? "4×6" : "3×8" },
+          { name:"Tractions / tirage", reps: level==="avancé" ? "5×5" : level==="intermédiaire" ? "4×6" : "3×6-8" }
+        ],
+        prise: [
+          { name:"Squats goblet", reps:"4×8–10" },
+          { name:"Développé militaire", reps:"4×8–10" },
+          { name:"Rowing", reps:"4×8–10" },
+          { name:"Tirage horizontal", reps:"3×10–12" }
+        ],
+        cardio: [
+          { name:"Footing", reps: age < 45 ? "25–35 min" : "15–25 min" },
+          { name:"Corde à sauter", reps: level==="avancé" ? "6×1 min (30s)" : "4×1 min (45s)" }
+        ]
+      };
+      const pick = () => {
+        if (objective === "Perte de poids") return [...lib.cardio, ...lib.fullbody.slice(0,2)];
+        if (objective === "Prise de muscle") return lib.prise;
+        if (objective === "Force") return lib.force;
+        return lib.fullbody;
+      };
+      return { level, plan: pick() };
+    }
+
+    // ============== App ==============
+    function App(){
+      const [currentUser, setCurrentUser] = useState(null);
+      const [mode, setMode] = useState("register");
+      const [profile, setProfile] = useState({ firstName:"", lastName:"", birthDate:"", email:"", password:"", height:"", objective:"Equilibre" });
+
+      const [tab, setTab] = useState("dashboard");
+      const [selectedDate, setSelectedDate] = useState(todayISO);
+      const [meal, setMeal] = useState({ food:"Pomme", grams:150 });
+      const [waterMl, setWaterMl] = useState(250);
+      const [eventDraft, setEventDraft] = useState({ title:"", description:"", date:todayISO, time:"12:00" });
+
+      const [meals, setMeals] = useState([]);
+      const [waters, setWaters] = useState([]);
+      const [events, setEvents] = useState([]);
+
+      const caloriesToday = useMemo(()=> meals.filter(m=>m.date===selectedDate).reduce((s,m)=>s+m.calories,0), [meals,selectedDate]);
+      const waterToday   = useMemo(()=> waters.filter(w=>w.date===selectedDate).reduce((s,w)=>s+w.ml,0), [waters,selectedDate]);
+
+      useEffect(()=>{
+        const last = localStorage.getItem("lifecoach.currentUserId");
+        if (last) db.users.get(Number(last)).then(u=>setCurrentUser(u||null));
+      },[]);
+
+      useEffect(()=>{
+        if (!currentUser) return;
+        (async()=>{
+          const [m,w,e] = await Promise.all([
+            db.meals.where({userId: currentUser.id}).toArray(),
+            db.waters.where({userId: currentUser.id}).toArray(),
+            db.events.where({userId: currentUser.id}).toArray(),
+          ]);
+          setMeals(m); setWaters(w); setEvents(e);
+        })();
+      },[currentUser]);
+
+      async function register(){
+        if (!profile.firstName || !profile.lastName || !profile.birthDate || !profile.email || !profile.password) { alert("Veuillez remplir tous les champs."); return; }
+        const exists = await db.users.where({ email: profile.email }).first();
+        if (exists) { alert("Cet email est déjà utilisé."); return; }
+        const passhash = await sha256(profile.password);
+        const id = await db.users.add({ ...profile, height: Number(profile.height||0), passhash, createdAt: new Date().toISOString() });
+        const user = await db.users.get(id);
+        localStorage.setItem("lifecoach.currentUserId", String(id));
+        setCurrentUser(user);
+      }
+      async function login(){
+        const user = await db.users.where({ email: profile.email }).first();
+        if (!user) { alert("Compte introuvable."); return; }
+        const passhash = await sha256(profile.password);
+        if (passhash !== user.passhash) { alert("Mot de passe incorrect."); return; }
+        localStorage.setItem("lifecoach.currentUserId", String(user.id));
+        setCurrentUser(user);
+      }
+      function logout(){ localStorage.removeItem("lifecoach.currentUserId"); setCurrentUser(null); }
+
+      async function addMeal(){
+        const per100 = FOOD_DB[meal.food];
+        const calories = Math.round((per100 * meal.grams)/100);
+        const row = { userId: currentUser.id, date: selectedDate, ...meal, calories };
+        const id = await db.meals.add(row);
+        setMeals(prev=>[...prev,{id,...row}]);
+      }
+      async function removeMeal(id){ await db.meals.delete(id); setMeals(prev=>prev.filter(m=>m.id!==id)); }
+
+      async function addWater(){
+        const row = { userId: currentUser.id, date: selectedDate, ml: waterMl };
+        const id = await db.waters.add(row);
+        setWaters(prev=>[...prev,{id,...row}]);
+      }
+
+      async function addEvent(){
+        if (!eventDraft.title) { alert("Titre requis"); return; }
+        const when = eventDraft.date + "T" + eventDraft.time + ":00";
+        const row = { userId: currentUser.id, ...eventDraft, when };
+        const id = await db.events.add(row);
+        setEvents(prev=>[...prev,{id,...row}]);
+        setEventDraft({ title:"", description:"", date:selectedDate, time:"12:00" });
+      }
+      async function removeEvent(id){ await db.events.delete(id); setEvents(prev=>prev.filter(e=>e.id!==id)); }
+
+      const eventsByDate = useMemo(()=>{
+        const m = {}; for(const e of events){ if(!m[e.date]) m[e.date]=[]; m[e.date].push(e); } return m;
+      },[events]);
+
+      const birthYear = currentUser ? Number((currentUser.birthDate||"0000").slice(0,4)) : new Date().getFullYear();
+      const age = currentUser ? new Date().getFullYear() - birthYear : 0;
+      const workoutPlan = currentUser ? suggestWorkouts({ age, heightCm: Number(currentUser.height||170), objective: currentUser.objective||"Equilibre" }) : null;
+
+      // Header actions: login/logout
+      useEffect(()=>{
+        const mount = document.getElementById("header-actions");
+        if (!mount) return;
+        const btn = document.createElement("button");
+        btn.className = "btn-ghost btn";
+        btn.textContent = currentUser ? "Déconnexion" : " ";
+        btn.onclick = ()=> currentUser ? logout() : null;
+        mount.innerHTML = "";
+        if (currentUser) mount.appendChild(btn);
+      },[currentUser]);
+
+      // ---------------------- UI ----------------------
+      if (!currentUser){
+        return React.createElement("div",null,
+          React.createElement("div",{className:"card soft"},
+            React.createElement("h2",{className:"title"}, mode==="register"?"Créer un compte":"Se connecter"),
+            React.createElement("div",{className:"row"},
+              React.createElement("div",{style:{flex:1,minWidth:240}},
+                React.createElement("label",null,"Prénom"),
+                React.createElement("input",{className:"input",value:profile.firstName,onChange:e=>setProfile({...profile,firstName:e.target.value})})
+              ),
+              React.createElement("div",{style:{flex:1,minWidth:240}},
+                React.createElement("label",null,"Nom"),
+                React.createElement("input",{className:"input",value:profile.lastName,onChange:e=>setProfile({...profile,lastName:e.target.value})})
+              ),
+              React.createElement("div",{style:{flex:"1 1 100%"} },
+                React.createElement("label",null,"Date de naissance"),
+                React.createElement("input",{type:"date",className:"input",value:profile.birthDate,onChange:e=>setProfile({...profile,birthDate:e.target.value})})
+              ),
+              React.createElement("div",{style:{flex:"1 1 100%"} },
+                React.createElement("label",null,"Taille (cm)"),
+                React.createElement("input",{type:"number",className:"input",value:profile.height,onChange:e=>setProfile({...profile,height:e.target.value})})
+              ),
+              React.createElement("div",{style:{flex:"1 1 100%"} },
+                React.createElement("label",null,"Objectif"),
+                React.createElement("select",{className:"input",value:profile.objective,onChange:e=>setProfile({...profile,objective:e.target.value})},
+                  React.createElement("option",null,"Equilibre"),
+                  React.createElement("option",null,"Perte de poids"),
+                  React.createElement("option",null,"Prise de muscle"),
+                  React.createElement("option",null,"Force")
+                )
+              ),
+              React.createElement("div",{style:{flex:1,minWidth:240}},
+                React.createElement("label",null,"Email"),
+                React.createElement("input",{type:"email",className:"input",value:profile.email,onChange:e=>setProfile({...profile,email:e.target.value})})
+              ),
+              React.createElement("div",{style:{flex:1,minWidth:240}},
+                React.createElement("label",null,"Mot de passe"),
+                React.createElement("input",{type:"password",className:"input",value:profile.password,onChange:e=>setProfile({...profile,password:e.target.value})})
+              ),
+            ),
+            React.createElement("div",{style:{display:"flex",gap:10,marginTop:12}},
+              mode==="register"
+                ? React.createElement("button",{className:"btn btn-primary",onClick:register},"Créer mon compte")
+                : React.createElement("button",{className:"btn btn-primary",onClick:login},"Connexion"),
+              React.createElement("button",{className:"btn btn-ghost",onClick:()=>setMode(mode==="register"?"login":"register")},
+                "Passer à ", mode==="register"?"Connexion":"Inscription"
+              )
+            ),
+            React.createElement("div",{className:"muted",style:{marginTop:8}},"Vos données sont stockées en local (IndexedDB).")
+          )
+        );
+      }
+
+      return React.createElement("div",null,
+        React.createElement("div",{className:"card soft tabs"},
+          ["dashboard","workout","food","water","calendar"].map(t=>
+            React.createElement("button",{
+              key:t,
+              className: "tab"+(tab===t?" active":""),
+              onClick:()=>setTab(t)
+            }, t.charAt(0).toUpperCase()+t.slice(1))
+          )
+        ),
+
+        /* ---------- Dashboard ---------- */
+        tab==="dashboard" && React.createElement("div",{className:"grid-cards"},
+          React.createElement("div",{className:"card"},
+            React.createElement("div",{className:"muted"},"Âge"),
+            React.createElement("div",{className:"stat"}, age)
+          ),
+          React.createElement("div",{className:"card"},
+            React.createElement("div",{className:"muted"},"Taille (cm)"),
+            React.createElement("div",{className:"stat"}, currentUser.height || "—")
+          ),
+          React.createElement("div",{className:"card"},
+            React.createElement("div",{className:"muted"},"Calories du jour"),
+            React.createElement("div",{className:"stat"}, caloriesToday, " kcal")
+          ),
+          React.createElement("div",{className:"card"},
+            React.createElement("div",{className:"muted"},"Eau bue"),
+            React.createElement("div",{className:"stat"}, waterToday, " ml")
+          ),
+          React.createElement("div",{className:"card", style:{gridColumn:"1 / -1"}},
+            React.createElement("div",{className:"title"}, "Plan d'entraînement (IA) ", React.createElement("span",{className:"chip"}, "Niveau: ", workoutPlan?.level)),
+            React.createElement("ul",{style:{margin:0,paddingLeft:18}},
+              workoutPlan?.plan.map((w,i)=> React.createElement("li",{key:i}, w.name, " — ",
+                React.createElement("span",{className:"muted"}, w.reps)
+              ))
+            )
+          ),
+          React.createElement("div",{className:"card", style:{gridColumn:"1 / -1"}},
+            React.createElement("div",{className:"title"},"Prochains événements"),
+            React.createElement("div",{className:"list",style:{maxHeight:240,overflow:"auto"}},
+              events.slice().sort((a,b)=>a.when.localeCompare(b.when)).filter(e=>e.when >= new Date().toISOString()).slice(0,8).map(e=>
+                React.createElement("div",{key:e.id,className:"event"},
+                  React.createElement("div",null,
+                    React.createElement("div",{style:{fontWeight:600}}, e.title),
+                    React.createElement("div",{className:"muted"}, e.date, " · ", e.time)
+                  ),
+                  React.createElement("button",{className:"btn btn-ghost",onClick:()=>removeEvent(e.id)},"Supprimer")
+                )
+              ),
+              events.filter(e=>e.when >= new Date().toISOString()).length===0 && React.createElement("div",{className:"muted"},"Aucun événement à venir.")
+            )
+          )
+        ),
+
+        /* ---------- Workout ---------- */
+        tab==="workout" && React.createElement("div",{style:{display:"grid",gap:14}},
+          React.createElement("div",{className:"card soft"},
+            React.createElement("div",{className:"title"},"Recommandations d'exercices"),
+            React.createElement("div",{className:"row"},
+              React.createElement("div",{style:{minWidth:180,flex:1}},
+                React.createElement("label",null,"Objectif"),
+                React.createElement("select",{className:"input", value: currentUser.objective, onChange: async e=>{ await db.users.update(currentUser.id,{objective:e.target.value}); setCurrentUser(await db.users.get(currentUser.id)); }},
+                  React.createElement("option",null,"Equilibre"),
+                  React.createElement("option",null,"Perte de poids"),
+                  React.createElement("option",null,"Prise de muscle"),
+                  React.createElement("option",null,"Force")
+                )
+              ),
+              React.createElement("div",{style:{minWidth:180,flex:1}},
+                React.createElement("label",null,"Taille (cm)"),
+                React.createElement("input",{type:"number",className:"input", value: currentUser.height ?? "", onChange: async e=>{ const h = Number(e.target.value||0); await db.users.update(currentUser.id,{height:h}); setCurrentUser(await db.users.get(currentUser.id)); }})
+              ),
+              React.createElement("div",{style:{minWidth:180,flex:1}},
+                React.createElement("label",null,"Âge"),
+                React.createElement("input",{disabled:true,className:"input", value: age })
+              )
+            ),
+            React.createElement("ul",{style:{marginTop:12,paddingLeft:18}},
+              workoutPlan?.plan.map((w,i)=> React.createElement("li",{key:i}, w.name, " — ",
+                React.createElement("span",{className:"muted"}, w.reps)
+              ))
+            )
+          )
+        ),
+
+        /* ---------- Food ---------- */
+        tab==="food" && React.createElement("div",{className:"grid-two"},
+          React.createElement("div",{className:"card soft"},
+            React.createElement("div",{className:"title"},"Journal alimentaire"),
+            React.createElement("div",{className:"row"},
+              React.createElement("div",{style:{minWidth:220,flex:2}},
+                React.createElement("label",null,"Aliment"),
+                React.createElement("select",{className:"input", value: meal.food, onChange:e=>setMeal({...meal, food: e.target.value})},
+                  Object.keys(FOOD_DB).map(k=> React.createElement("option",{key:k,value:k}, k.replaceAll("_"," ")))
+                )
+              ),
+              React.createElement("div",{style:{minWidth:120}},
+                React.createElement("label",null,"Grammage"),
+                React.createElement("input",{type:"number",className:"input", value: meal.grams, onChange:e=>setMeal({...meal, grams: Number(e.target.value||0)})})
+              ),
+              React.createElement("div",{style:{minWidth:160}},
+                React.createElement("label",null,"Date"),
+                React.createElement("input",{type:"date",className:"input", value: selectedDate, onChange:e=>setSelectedDate(e.target.value)})
+              ),
+              React.createElement("div",{style:{alignSelf:"end"}},
+                React.createElement("button",{className:"btn btn-primary", onClick:addMeal},"Ajouter")
+              )
+            ),
+            React.createElement("div",null,
+              React.createElement("strong",null, "Repas du ", selectedDate),
+              React.createElement("div",{className:"list",style:{marginTop:8}},
+                meals.filter(m=>m.date===selectedDate).map(m=>
+                  React.createElement("div",{key:m.id,className:"event"},
+                    React.createElement("div",null,
+                      React.createElement("div",{style:{fontWeight:600}}, m.food.replaceAll("_"," ")),
+                      React.createElement("div",{className:"muted"}, m.grams, " g · ", m.calories, " kcal")
+                    ),
+                    React.createElement("button",{className:"btn btn-ghost",onClick:()=>removeMeal(m.id)},"Supprimer")
+                  )
+                ),
+                meals.filter(m=>m.date===selectedDate).length===0 && React.createElement("div",{className:"muted"},"Aucun aliment pour cette date.")
+              )
+            )
+          ),
+          React.createElement("div",{className:"card"},
+            React.createElement("div",{className:"title"},"Total calories"),
+            React.createElement("div",{className:"stat"}, caloriesToday, " kcal"),
+            React.createElement("div",{className:"muted"},"Basé sur ", Object.keys(FOOD_DB).length, " aliments.")
+          )
+        ),
+
+        /* ---------- Water ---------- */
+        tab==="water" && React.createElement("div",{className:"card soft"},
+          React.createElement("div",{className:"title"},"Hydratation"),
+          React.createElement("div",{className:"row"},
+            React.createElement("div",{style:{minWidth:160}},
+              React.createElement("label",null,"Taille du verre (ml)"),
+              React.createElement("input",{type:"number",className:"input", value: waterMl, onChange:e=>setWaterMl(Number(e.target.value||0))})
+            ),
+            React.createElement("div",{style:{minWidth:160}},
+              React.createElement("label",null,"Date"),
+              React.createElement("input",{type:"date",className:"input", value: selectedDate, onChange:e=>setSelectedDate(e.target.value)})
+            ),
+            React.createElement("div",{style:{alignSelf:"end"}},
+              React.createElement("button",{className:"btn btn-primary", onClick:addWater},"Ajouter un verre")
+            )
+          ),
+          React.createElement("div",{style:{marginTop:12,display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px,1fr))",gap:12}},
+            React.createElement("div",{className:"card"},
+              React.createElement("div",{className:"muted"},"Total du ", selectedDate),
+              React.createElement("div",{className:"stat"}, waterToday, " ml")
+            )
+          )
+        ),
+
+        /* ---------- Calendar ---------- */
+        tab==="calendar" && React.createElement("div",{className:"grid-two"},
+          React.createElement("div",{className:"card soft"},
+            React.createElement("div",{className:"title"},"Calendrier"),
+            React.createElement("div",{className:"row"},
+              React.createElement("div",{style:{minWidth:220,flex:2}},
+                React.createElement("label",null,"Titre"),
+                React.createElement("input",{className:"input", value: eventDraft.title, onChange:e=>setEventDraft({...eventDraft, title:e.target.value})})
+              ),
+              React.createElement("div",null,
+                React.createElement("label",null,"Date"),
+                React.createElement("input",{type:"date",className:"input", value: eventDraft.date, onChange:e=>setEventDraft({...eventDraft,date:e.target.value})})
+              ),
+              React.createElement("div",null,
+                React.createElement("label",null,"Heure"),
+                React.createElement("input",{type:"time",className:"input", value: eventDraft.time, onChange:e=>setEventDraft({...eventDraft,time:e.target.value})})
+              ),
+              React.createElement("div",{style:{alignSelf:"end"}},
+                React.createElement("button",{className:"btn btn-primary", onClick:addEvent},"Ajouter")
+              ),
+              React.createElement("div",{style:{flex:"1 1 100%"} },
+                React.createElement("label",null,"Description"),
+                React.createElement("textarea",{className:"input", style:{height:70,resize:"vertical"}, value: eventDraft.description, onChange:e=>setEventDraft({...eventDraft, description:e.target.value})})
+              )
+            ),
+            React.createElement("div",{className:"grid-responsive", style:{marginTop:12}},
+              Object.keys(eventsByDate).sort().map(date=>
+                React.createElement("div",{key:date,className:"card"},
+                  React.createElement("div",{style:{fontWeight:600,marginBottom:6}}, date),
+                  React.createElement("div",{className:"list"},
+                    eventsByDate[date].map(e=>
+                      React.createElement("div",{key:e.id,className:"event"},
+                        React.createElement("div",null,
+                          React.createElement("div",{style:{fontWeight:600}}, e.title, " ",
+                            React.createElement("span",{className:"muted"}, "· ", e.time)
+                          ),
+                          e.description && React.createElement("div",{className:"muted"}, e.description)
+                        ),
+                        React.createElement("button",{className:"btn btn-ghost", onClick:()=>removeEvent(e.id)},"Supprimer")
+                      )
+                    )
+                  )
+                )
+              ),
+              Object.keys(eventsByDate).length===0 && React.createElement("div",{className:"muted"},"Aucun événement pour l'instant.")
+            )
+          ),
+          React.createElement("div",{className:"card"},
+            React.createElement("div",{className:"title"},"Profil"),
+            React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}},
+              React.createElement("div",null,
+                React.createElement("label",null,"Prénom"),
+                React.createElement("input",{className:"input", value: currentUser.firstName, onChange: async e=>{ await db.users.update(currentUser.id,{ firstName:e.target.value }); setCurrentUser(await db.users.get(currentUser.id)); }})
+              ),
+              React.createElement("div",null,
+                React.createElement("label",null,"Nom"),
+                React.createElement("input",{className:"input", value: currentUser.lastName, onChange: async e=>{ await db.users.update(currentUser.id,{ lastName:e.target.value }); setCurrentUser(await db.users.get(currentUser.id)); }})
+              ),
+              React.createElement("div",{style:{gridColumn:"1 / -1"}},
+                React.createElement("label",null,"Date de naissance"),
+                React.createElement("input",{type:"date",className:"input", value: currentUser.birthDate, onChange: async e=>{ await db.users.update(currentUser.id,{ birthDate:e.target.value }); setCurrentUser(await db.users.get(currentUser.id)); }})
+              ),
+              React.createElement("div",{style:{gridColumn:"1 / -1"}},
+                React.createElement("label",null,"Email"),
+                React.createElement("input",{type:"email",className:"input", value: currentUser.email, onChange: async e=>{ await db.users.update(currentUser.id,{ email:e.target.value }); setCurrentUser(await db.users.get(currentUser.id)); }})
+              )
+            )
+          )
+        )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(React.createElement(App));
+  })();
+  </script>
+</body>
+</html>
