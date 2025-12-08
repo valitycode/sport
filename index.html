@@ -1,647 +1,1253 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LifeCoach — Coach de vie</title>
+  <meta charset="UTF-8" />
+  <title>Ski Foux d'Allos - Prototype+</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+
   <style>
-    /* ======================== THEME & TOKENS ======================== */
-    /* Light theme (default) */
-    :root{
-      --bg: #f6f7fb;
-      --bg-2:#eef1f8;
-      --fg: #0f172a;
-      --muted: #64748b;
-      --card: #ffffff;
-      --border: #e2e8f0;
-      --shadow: 0 10px 25px rgba(2,8,23,.06);
-      --accent: #2563eb;
-      --accent-2:#7c3aed;
-      --radius: 16px;
-      --radius-sm: 12px;
-      --glass: rgba(255,255,255,0.65);
-      --ring: 0 0 0 4px rgba(37, 99, 235, .15);
-      --brand-grad: linear-gradient(135deg, var(--accent), var(--accent-2));
-      color-scheme: light;
-    }
-    /* Dark theme overrides when html[data-theme="dark"] */
-    html[data-theme="dark"]{
-      --bg: #0b1220;
-      --bg-2:#0e172a;
-      --fg: #e5e7eb;
-      --muted: #9ca3af;
-      --card: #0f172a;
-      --border: #1f2937;
-      --shadow: 0 10px 25px rgba(0,0,0,.35);
-      --glass: rgba(17,24,39,0.6);
-      --ring: 0 0 0 4px rgba(124,58,237,.18);
-      color-scheme: dark;
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #202733;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      touch-action: none;
     }
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, "Apple Color Emoji","Segoe UI Emoji";
-      color: var(--fg);
-      background:
-        radial-gradient(1200px 600px at 10% -10%, var(--bg-2), transparent 50%),
-        radial-gradient(800px 400px at 90% 10%, var(--bg-2), transparent 50%),
-        var(--bg);
-      background-attachment: fixed;
-      line-height: 1.35;
+    canvas {
+      display: block;
     }
 
-    /* ======================== LAYOUT ======================== */
-    .container{max-width:1120px;margin:0 auto;padding:20px}
-    header.sticky{
-      position:sticky; top:0; z-index:20;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      background: var(--glass);
-      border-bottom: 1px solid var(--border);
+    /* HUD global */
+    #hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      color: white;
+      font-size: 12px;
     }
-    .brand{ display:flex; align-items:center; gap:12px; }
-    .logo{
-      width:44px; height:44px; border-radius:14px;
-      display:flex; align-items:center; justify-content:center;
-      color:#fff; font-weight:900; letter-spacing:0.5px;
-      background: var(--brand-grad);
-      box-shadow: inset 0 -2px 8px rgba(255,255,255,.25), inset 0 8px 18px rgba(0,0,0,.12);
+
+    #topHUD {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.45);
+      padding: 6px 12px;
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      pointer-events: auto;
+      white-space: nowrap;
     }
-    .headline{font-weight:800; font-size:20px; letter-spacing:.2px}
 
-    /* ======================== CARDS & ELEMENTS ======================== */
-    .row{display:flex;gap:14px;flex-wrap:wrap}
-    .card{
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      box-shadow: var(--shadow);
-      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    #topHUD span {
+      opacity: 0.9;
     }
-    .card:hover{ transform: translateY(-1px); box-shadow: 0 14px 34px rgba(2,8,23,.10) }
-    .soft{ background: linear-gradient(180deg, rgba(255,255,255,.05), transparent); }
-    .title{ margin:0 0 10px 0; font-weight:700; font-size: 18px }
-    .muted{ color: var(--muted); font-size: 12px }
-    .stat{ font-weight:800; font-size:28px }
 
-    /* Inputs */
-    .input, select, textarea{
-      width:100%; padding:12px 12px; border-radius:12px;
-      border:1px solid var(--border); background: transparent; color: var(--fg);
-      transition: border-color .15s ease, box-shadow .15s ease;
-      outline: none;
+    #liftInfo {
+      font-weight: 600;
     }
-    .input:focus, select:focus, textarea:focus{ border-color: var(--accent); box-shadow: var(--ring) }
-    label{ display:block; font-size:12px; color: var(--muted); margin: 6px 0 6px }
 
-    /* Buttons */
-    .btn{ padding:10px 14px; border-radius:12px; border:1px solid transparent; cursor:pointer; font-weight:600 }
-    .btn:active{ transform: translateY(1px) }
-    .btn-primary{ color:#fff; background: var(--brand-grad); box-shadow: var(--shadow) }
-    .btn-primary:hover{ filter: brightness(1.03) }
-    .btn-ghost{ background: transparent; color: var(--fg); border-color: var(--border) }
-    .btn-ghost:hover{ border-color: var(--accent) }
+    /* Joystick */
+    #joystickContainer {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
 
-    /* Tabs */
-    .tabs{ display:flex; gap:8px; flex-wrap:wrap }
-    .tab{ padding:8px 12px; border-radius:999px; border:1px solid var(--border); background:transparent; cursor:pointer; }
-    .tab.active{ background: var(--brand-grad); color:#fff; border-color: transparent; }
+    .joystick-base {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), rgba(0,0,0,0.6));
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
 
-    /* Grids */
-    .grid-cards{ display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:14px }
-    .grid-two{ display:grid; grid-template-columns: 2fr 1fr; gap:14px }
-    .grid-responsive{ display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:14px }
-    @media (max-width: 860px){ .grid-two{ grid-template-columns: 1fr } }
+    .joystick-stick {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #ffffff, #cfd3e0);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+      transform: translate(0, 0);
+      transition: transform 0.08s ease-out;
+      touch-action: none;
+    }
 
-    /* Items */
-    .event{ display:flex; justify-content:space-between; align-items:center; border:1px dashed var(--border); border-radius:12px; padding:10px 12px }
-    .chip{ display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border) }
-    .list{ display:flex; flex-direction:column; gap:10px }
+    /* Boutons remontées */
+    #liftButtons {
+      position: absolute;
+      right: 10px;
+      bottom: 22%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: auto;
+    }
 
-    /* Micro animations */
-    @keyframes in { from{opacity:0; transform: translateY(6px)} to{opacity:1; transform:none} }
-    .fade-in{ animation: in .25s ease both }
+    .lift-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-    /* Theme toggle */
-    .theme-toggle{ display:flex; align-items:center; gap:8px }
-    .switch{ width:46px; height:26px; border-radius:999px; background: var(--border); position:relative; border:1px solid var(--border); cursor:pointer }
-    .knob{ position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s ease }
-    .switch.on{ background: var(--accent) }
-    .switch.on .knob{ left:24px }
+    .lift-btn span.dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+    }
+
+    .lift-btn.active {
+      background: rgba(59,130,246,0.9);
+    }
+
+    /* Météo + Shop boutons */
+    #sideButtons {
+      position: absolute;
+      left: 10px;
+      bottom: 22%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .ui-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 11px;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #hint {
+      position: absolute;
+      bottom: 210px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(255,255,255,0.9);
+      background: rgba(0,0,0,0.35);
+      padding: 4px 10px;
+      border-radius: 999px;
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+    }
+
+    /* Minimap */
+    #minimap {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 120px;
+      height: 120px;
+      border-radius: 20px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.3);
+      pointer-events: none;
+    }
+
+    /* Panneau Shop */
+    #shopOverlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    #shopPanel {
+      pointer-events: auto;
+      min-width: 240px;
+      max-width: 320px;
+      background: rgba(15,23,42,0.95);
+      border-radius: 18px;
+      padding: 14px 16px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.8);
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      color: #e5e7eb;
+      font-size: 13px;
+    }
+
+    #shopTitle {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .shop-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .shop-item {
+      flex: 1 1 30%;
+      min-width: 70px;
+      border-radius: 12px;
+      padding: 6px 4px;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: rgba(15,23,42,0.9);
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .shop-color-preview {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      margin: 0 auto 4px auto;
+      border: 1px solid rgba(15,23,42,0.7);
+    }
+
+    #shopClose {
+      align-self: flex-end;
+      font-size: 11px;
+      opacity: 0.8;
+      cursor: pointer;
+    }
+
+    /* Chute info */
+    #fallInfo {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(12px);
+      display: none;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
-  <header class="sticky">
-    <div class="container" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;">
-      <div class="brand">
-        <div class="logo">LC</div>
-        <div>
-          <div class="headline">LifeCoach</div>
-          <div class="muted">Votre tableau de bord bien-être</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:14px">
-        <div class="theme-toggle">
-          <span class="muted">Thème</span>
-          <div id="themeSwitch" class="switch"><div class="knob"></div></div>
-        </div>
-        <div id="header-actions"></div>
+  <!-- HUD -->
+  <div id="hud">
+    <div id="topHUD">
+      <span>🏔️ Station : <strong>Foux d’Allos (style)</strong></span>
+      <span>🎿 Vitesse : <span id="speedInfo">0.0</span> m/s</span>
+      <span>🚶 File : <span id="queueInfo">bas des pistes</span></span>
+      <span>🚡 Remontée : <span id="liftInfo">aucune</span></span>
+      <span>⛅ Météo : <span id="weatherInfo">soleil</span></span>
+    </div>
+
+    <canvas id="minimap" width="120" height="120"></canvas>
+
+    <div id="hint">Pose ton pouce sur le joystick pour tourner et accélérer</div>
+
+    <div id="joystickContainer">
+      <div class="joystick-base" id="joystickBase">
+        <div class="joystick-stick" id="joystickStick"></div>
       </div>
     </div>
-  </header>
 
-  <main class="container fade-in" style="margin-top:18px">
-    <div id="root"></div>
-  </main>
+    <div id="liftButtons">
+      <button class="lift-btn" id="btnAiguille">
+        <span class="dot"></span>3 places – Aiguille
+      </button>
+      <button class="lift-btn" id="btnChaux">
+        <span class="dot"></span>6 places – Chaux
+      </button>
+    </div>
 
-  <!-- React + ReactDOM (UMD) -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <!-- Dexie -->
-  <script src="https://unpkg.com/dexie@3/dist/dexie.js"></script>
+    <div id="sideButtons">
+      <button class="ui-btn" id="btnWeather">⛅ Météo</button>
+      <button class="ui-btn" id="btnShop">🛍️ Shop</button>
+    </div>
+
+    <div id="shopOverlay">
+      <div id="shopPanel">
+        <div id="shopClose">✕ Fermer</div>
+        <div id="shopTitle">Shop – Tenues</div>
+        <div class="shop-items">
+          <div class="shop-item" data-style="blue">
+            <div class="shop-color-preview" style="background: linear-gradient(135deg,#1d4ed8,#60a5fa);"></div>
+            <div>Bleu</div>
+          </div>
+          <div class="shop-item" data-style="red">
+            <div class="shop-color-preview" style="background: linear-gradient(135deg,#b91c1c,#f97316);"></div>
+            <div>Rouge</div>
+          </div>
+          <div class="shop-item" data-style="green">
+            <div class="shop-color-preview" style="background: linear-gradient(135deg,#047857,#22c55e);"></div>
+            <div>Vert</div>
+          </div>
+        </div>
+        <small style="opacity:0.75;">Les tenues sont purement cosmétiques dans ce prototype.</small>
+      </div>
+    </div>
+
+    <div id="fallInfo">💥 Oups, chute ! Respawn...</div>
+  </div>
+
+  <!-- Three.js -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 
   <script>
-  (function(){
-    const { useState, useEffect, useMemo } = React;
+    // ==========================
+    //       VARIABLES GLOBALES
+    // ==========================
+    let scene, camera, renderer, clock;
+    let skier, skierGroup;
+    let bots = [];
+    const BOT_COUNT = 18;
+    let worldPlane;
+    let hemiLight, dirLight;
 
-    // ================= THEME TOGGLE =================
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    function applyTheme(mode){
-      const html = document.documentElement;
-      if(mode === 'dark') html.setAttribute('data-theme','dark');
-      else if(mode === 'light') html.setAttribute('data-theme','light');
-      else html.setAttribute('data-theme', prefersDark ? 'dark' : 'light'); // auto
-    }
-    function initThemeSwitch(){
-      const saved = localStorage.getItem('lifecoach.theme') || 'auto';
-      applyTheme(saved);
-      const sw = document.getElementById('themeSwitch');
-      const currentIsDark = (saved === 'dark') || (saved === 'auto' && prefersDark);
-      if(currentIsDark) sw.classList.add('on');
-      sw.onclick = () => {
-        const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-        const next = cur === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('lifecoach.theme', next);
-        applyTheme(next);
-        sw.classList.toggle('on');
-      };
-    }
-    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initThemeSwitch);
-    else initThemeSwitch();
+    let joystickBase = document.getElementById('joystickBase');
+    let joystickStick = document.getElementById('joystickStick');
+    let speedInfo = document.getElementById('speedInfo');
+    let queueInfo = document.getElementById('queueInfo');
+    let liftInfo = document.getElementById('liftInfo');
+    let weatherInfo = document.getElementById('weatherInfo');
+    let btnAiguille = document.getElementById('btnAiguille');
+    let btnChaux = document.getElementById('btnChaux');
+    let btnWeather = document.getElementById('btnWeather');
+    let btnShop = document.getElementById('btnShop');
+    let shopOverlay = document.getElementById('shopOverlay');
+    let shopPanel = document.getElementById('shopPanel');
+    let shopClose = document.getElementById('shopClose');
+    let fallInfo = document.getElementById('fallInfo');
 
-    // ============== DB ==============
-    class LifeCoachDB extends Dexie {
-      constructor(){
-        super("LifeCoachDB_cdn_pretty_fix");
-        this.version(1).stores({
-          users: "++id, email",
-          meals: "++id, userId, date",
-          waters: "++id, userId, date",
-          events: "++id, userId, date",
-        });
-        this.users = this.table("users");
-        this.meals = this.table("meals");
-        this.waters = this.table("waters");
-        this.events = this.table("events");
-      }
-    }
-    const db = new LifeCoachDB();
+    const minimapCanvas = document.getElementById('minimap');
+    const mmCtx = minimapCanvas.getContext('2d');
 
-    // ============== Helpers ==============
-    const todayISO = new Date().toISOString().slice(0,10);
-    async function sha256(text){
-      const enc = new TextEncoder().encode(text);
-      const buf = await crypto.subtle.digest("SHA-256", enc);
-      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
-    }
-    const FOOD_DB = {
-      "Pomme":52,"Banane":89,"Riz_cuit":130,"Poulet_grillé":165,"Saumon":208,"Oeuf":155,
-      "Pain_blanc":265,"Avoine":389,"Brocoli":34,"Yaourt_nature":61,"Fromage_blanc":98,
-      "Pâtes_cuites":131,"Patate_douce":86,"Amandes":579,"Beurre_de_cacahuète":588
+    // Obstacles pour collisions
+    let obstacles = [];
+
+    // Joystick state
+    let joystick = {
+      active: false,
+      baseX: 0,
+      baseY: 0,
+      valueX: 0,
+      valueY: 0
     };
-    function suggestWorkouts({age, heightCm, objective}){
-      let level = "débutant";
-      if (age <= 35) level = "intermédiaire";
-      if (age <= 30 && heightCm >= 175) level = "avancé";
-      const lib = {
-        fullbody: [
-          { name:"Squats", reps: level==="avancé" ? "4×12" : level==="intermédiaire" ? "3×12" : "3×10" },
-          { name:"Pompes", reps: level==="avancé" ? "4×15" : level==="intermédiaire" ? "3×12" : "3×8" },
-          { name:"Fentes", reps: level==="avancé" ? "4×12/jambe" : level==="intermédiaire" ? "3×10/jambe" : "2×10/jambe" },
-          { name:"Gainage", reps: level==="avancé" ? "4×60s" : level==="intermédiaire" ? "3×45s" : "3×30s" }
-        ],
-        force: [
-          { name:"Soulevé de terre léger", reps: level==="avancé" ? "5×5" : level==="intermédiaire" ? "4×6" : "3×6" },
-          { name:"Développé couché / pompes lestées", reps: level==="avancé" ? "5×5" : level==="intermédiaire" ? "4×6" : "3×8" },
-          { name:"Tractions / tirage", reps: level==="avancé" ? "5×5" : level==="intermédiaire" ? "4×6" : "3×6-8" }
-        ],
-        prise: [
-          { name:"Squats goblet", reps:"4×8–10" },
-          { name:"Développé militaire", reps:"4×8–10" },
-          { name:"Rowing", reps:"4×8–10" },
-          { name:"Tirage horizontal", reps:"3×10–12" }
-        ],
-        cardio: [
-          { name:"Footing", reps: age < 45 ? "25–35 min" : "15–25 min" },
-          { name:"Corde à sauter", reps: level==="avancé" ? "6×1 min (30s)" : "4×1 min (45s)" }
-        ]
-      };
-      const pick = () => {
-        if (objective === "Perte de poids") return [...lib.cardio, ...lib.fullbody.slice(0,2)];
-        if (objective === "Prise de muscle") return lib.prise;
-        if (objective === "Force") return lib.force;
-        return lib.fullbody;
-      };
-      return { level, plan: pick() };
+
+    // Player physics & state
+    const playerState = {
+      velocity: new THREE.Vector3(0, 0, 0),
+      maxSpeed: 35,
+      acceleration: 45,
+      friction: 12,
+      gravitySlope: 4,
+      onLift: false,
+      currentLift: null,
+      fallen: false,
+      fallTimer: 0,
+      lastSafePos: new THREE.Vector3(0, 1.2, 8)
+    };
+
+    // Lifts (remontées)
+    const lifts = {
+      aiguille: {
+        chairs: [],
+        pathStart: new THREE.Vector3(-30, 0, 10),
+        pathEnd:   new THREE.Vector3(-30, 40, -120),
+        speed: 5
+      },
+      chaux: {
+        chairs: [],
+        pathStart: new THREE.Vector3(30, 0, 10),
+        pathEnd:   new THREE.Vector3(30, 45, -160),
+        speed: 6
+      }
+    };
+
+    // Météo
+    const weatherState = {
+      mode: 'sunny', // 'sunny' | 'snow' | 'foggy'
+      snowGroup: null
+    };
+
+    // Matériaux du skieur pour le shop
+    const skierMaterials = {
+      body: null,
+      skis: null,
+      head: null
+    };
+
+    init();
+    animate();
+
+    function init() {
+      clock = new THREE.Clock();
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x9fd8ff);
+      scene.fog = new THREE.Fog(0x9fd8ff, 60, 400);
+
+      const aspect = window.innerWidth / window.innerHeight;
+      camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
+      camera.position.set(0, 10, 20);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      document.body.appendChild(renderer.domElement);
+
+      // Lumières
+      hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+      hemiLight.position.set(0, 200, 0);
+      scene.add(hemiLight);
+
+      dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+      dirLight.position.set(-80, 120, 60);
+      scene.add(dirLight);
+
+      createWorld();
+      createLifts();
+      createSkier();
+      createBots();
+
+      setupJoystick();
+      setupUI();
+      setWeather('sunny');
+
+      window.addEventListener('resize', onWindowResize);
     }
 
-    // ============== App ==============
-    function App(){
-      const [currentUser, setCurrentUser] = useState(null);
-      const [mode, setMode] = useState("register");
-      const [profile, setProfile] = useState({ firstName:"", lastName:"", birthDate:"", email:"", password:"", height:"", objective:"Equilibre" });
+    // ==========================
+    //         MONDE 3D
+    // ==========================
+    function createWorld() {
+      // Plan de neige
+      const geometry = new THREE.PlaneGeometry(400, 600, 40, 60);
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xf9fcff,
+        roughness: 0.8,
+        metalness: 0.0
+      });
+      worldPlane = new THREE.Mesh(geometry, material);
+      worldPlane.rotation.x = -Math.PI / 2;
+      worldPlane.position.set(0, 0, -200);
+      scene.add(worldPlane);
 
-      const [tab, setTab] = useState("dashboard");
-      const [selectedDate, setSelectedDate] = useState(todayISO);
-      const [meal, setMeal] = useState({ food:"Pomme", grams:150 });
-      const [waterMl, setWaterMl] = useState(250);
-      const [eventDraft, setEventDraft] = useState({ title:"", description:"", date:todayISO, time:"12:00" });
+      // Relief
+      const posAttr = worldPlane.geometry.attributes.position;
+      for (let i = 0; i < posAttr.count; i++) {
+        const x = posAttr.getX(i);
+        const z = posAttr.getZ(i);
+        let height = 0;
 
-      const [meals, setMeals] = useState([]);
-      const [waters, setWaters] = useState([]);
-      const [events, setEvents] = useState([]);
+        const distFromCenterX = Math.abs(x) / 200;
+        height += distFromCenterX * 10;
 
-      const caloriesToday = useMemo(()=> meals.filter(m=>m.date===selectedDate).reduce((s,m)=>s+m.calories,0), [meals,selectedDate]);
-      const waterToday   = useMemo(()=> waters.filter(w=>w.date===selectedDate).reduce((s,w)=>s+w.ml,0), [waters,selectedDate]);
+        const distZ = (-z - 150) / 200;
+        if (distZ > 0) {
+          height += Math.sin(distZ * Math.PI) * 18;
+        }
 
-      useEffect(()=>{
-        const last = localStorage.getItem("lifecoach.currentUserId");
-        if (last) db.users.get(Number(last)).then(u=>setCurrentUser(u||null));
-      },[]);
-
-      useEffect(()=>{
-        if (!currentUser) return;
-        (async()=>{
-          const [m,w,e] = await Promise.all([
-            db.meals.where({userId: currentUser.id}).toArray(),
-            db.waters.where({userId: currentUser.id}).toArray(),
-            db.events.where({userId: currentUser.id}).toArray(),
-          ]);
-          setMeals(m); setWaters(w); setEvents(e);
-        })();
-      },[currentUser]);
-
-      async function register(){
-        if (!profile.firstName || !profile.lastName || !profile.birthDate || !profile.email || !profile.password) { alert("Veuillez remplir tous les champs."); return; }
-        const exists = await db.users.where({ email: profile.email }).first();
-        if (exists) { alert("Cet email est déjà utilisé."); return; }
-        const passhash = await sha256(profile.password);
-        const id = await db.users.add({ ...profile, height: Number(profile.height||0), passhash, createdAt: new Date().toISOString() });
-        const user = await db.users.get(id);
-        localStorage.setItem("lifecoach.currentUserId", String(id));
-        setCurrentUser(user);
+        posAttr.setY(i, height);
       }
-      async function login(){
-        const user = await db.users.where({ email: profile.email }).first();
-        if (!user) { alert("Compte introuvable."); return; }
-        const passhash = await sha256(profile.password);
-        if (passhash !== user.passhash) { alert("Mot de passe incorrect."); return; }
-        localStorage.setItem("lifecoach.currentUserId", String(user.id));
-        setCurrentUser(user);
+      posAttr.needsUpdate = true;
+      worldPlane.geometry.computeVertexNormals();
+
+      // Bas de station
+      const baseGeometry = new THREE.PlaneGeometry(120, 80);
+      const baseMaterial = new THREE.MeshStandardMaterial({
+        color: 0xe2e5f0,
+        roughness: 0.7
+      });
+      const baseStation = new THREE.Mesh(baseGeometry, baseMaterial);
+      baseStation.rotation.x = -Math.PI / 2;
+      baseStation.position.set(0, 0.05, 10);
+      scene.add(baseStation);
+
+      // Files d’attente
+      const queueMat = new THREE.MeshStandardMaterial({ color: 0xd1c44a });
+      const queueAiguille = new THREE.Mesh(new THREE.PlaneGeometry(10, 20), queueMat);
+      queueAiguille.rotation.x = -Math.PI / 2;
+      queueAiguille.position.set(-30, 0.06, 18);
+      scene.add(queueAiguille);
+
+      const queueChaux = new THREE.Mesh(new THREE.PlaneGeometry(14, 24), queueMat);
+      queueChaux.rotation.x = -Math.PI / 2;
+      queueChaux.position.set(30, 0.06, 18);
+      scene.add(queueChaux);
+
+      // Pistes
+      createSlopeLine(new THREE.Color(0x3b82f6), -5, 0);
+      createSlopeLine(new THREE.Color(0xef4444), 10, -40);
+      createSlopeLine(new THREE.Color(0x111827), -18, -80);
+
+      // Arbres
+      createTrees();
+    }
+
+    function createSlopeLine(color, offsetX, offsetZ) {
+      const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.7 });
+      const geom = new THREE.PlaneGeometry(2, 220);
+      const slope = new THREE.Mesh(geom, mat);
+      slope.rotation.x = -Math.PI / 2;
+      slope.position.set(offsetX, 0.08, -120 + offsetZ);
+      scene.add(slope);
+    }
+
+    function createTrees() {
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
+      const leafMat = new THREE.MeshStandardMaterial({ color: 0x1f6b3b });
+
+      for (let i = 0; i < 80; i++) {
+        const x = (Math.random() < 0.5 ? -1 : 1) * (40 + Math.random() * 120);
+        const z = -40 - Math.random() * 450;
+
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 3, 6), trunkMat);
+        trunk.position.set(x, 1.5, z);
+
+        const leaves = new THREE.Mesh(new THREE.ConeGeometry(3 + Math.random(), 8 + Math.random() * 4, 8), leafMat);
+        leaves.position.set(x, 6.5, z);
+
+        scene.add(trunk);
+        scene.add(leaves);
+
+        // Ajouter comme obstacle (collision sur le tronc)
+        obstacles.push({ mesh: trunk, radius: 1.3 });
       }
-      function logout(){ localStorage.removeItem("lifecoach.currentUserId"); setCurrentUser(null); }
+    }
 
-      async function addMeal(){
-        const per100 = FOOD_DB[meal.food];
-        const calories = Math.round((per100 * meal.grams)/100);
-        const row = { userId: currentUser.id, date: selectedDate, ...meal, calories };
-        const id = await db.meals.add(row);
-        setMeals(prev=>[...prev,{id,...row}]);
+    // ==========================
+    //          REMONTÉES
+    // ==========================
+    function createLifts() {
+      createLift('aiguille', lifts.aiguille, 6, 3);
+      createLift('chaux', lifts.chaux, 8, 6);
+    }
+
+    function createLift(name, lift, poleCount, seatsPerChair) {
+      const poleMat = new THREE.MeshStandardMaterial({ color: 0x4b5563 });
+      const cableMat = new THREE.LineBasicMaterial({ color: 0x374151 });
+
+      const pathVec = new THREE.Vector3().subVectors(lift.pathEnd, lift.pathStart);
+
+      // Pylônes
+      for (let i = 0; i <= poleCount; i++) {
+        const t = i / poleCount;
+        const pos = new THREE.Vector3().copy(lift.pathStart).addScaledVector(pathVec, t);
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 10, 8), poleMat);
+        pole.position.set(pos.x, pos.y + 5, pos.z);
+        scene.add(pole);
+
+        obstacles.push({ mesh: pole, radius: 1.4 });
       }
-      async function removeMeal(id){ await db.meals.delete(id); setMeals(prev=>prev.filter(m=>m.id!==id)); }
 
-      async function addWater(){
-        const row = { userId: currentUser.id, date: selectedDate, ml: waterMl };
-        const id = await db.waters.add(row);
-        setWaters(prev=>[...prev,{id,...row}]);
-      }
+      // Câble
+      const cablePoints = [
+        lift.pathStart.clone().add(new THREE.Vector3(0, 8, 0)),
+        lift.pathEnd.clone().add(new THREE.Vector3(0, 8, 0))
+      ];
+      const cableGeom = new THREE.BufferGeometry().setFromPoints(cablePoints);
+      const cable = new THREE.Line(cableGeom, cableMat);
+      scene.add(cable);
 
-      async function addEvent(){
-        if (!eventDraft.title) { alert("Titre requis"); return; }
-        const when = eventDraft.date + "T" + eventDraft.time + ":00";
-        const row = { userId: currentUser.id, ...eventDraft, when };
-        const id = await db.events.add(row);
-        setEvents(prev=>[...prev,{id,...row}]);
-        setEventDraft({ title:"", description:"", date:selectedDate, time:"12:00" });
-      }
-      async function removeEvent(id){ await db.events.delete(id); setEvents(prev=>prev.filter(e=>e.id!==id)); }
+      // Sièges
+      const chairGeom = new THREE.BoxGeometry(3, 0.3, 0.8);
+      const chairMat = new THREE.MeshStandardMaterial({ color: name === 'aiguille' ? 0x60a5fa : 0xf97316 });
 
-      const eventsByDate = useMemo(()=>{
-        const m = {}; for(const e of events){ if(!m[e.date]) m[e.date]=[]; m[e.date].push(e); } return m;
-      },[events]);
+      const segmentCount = seatsPerChair * 3;
+      for (let i = 0; i < segmentCount; i++) {
+        const t = i / segmentCount;
+        const basePos = new THREE.Vector3().copy(lift.pathStart).addScaledVector(pathVec, t);
+        const chairGroup = new THREE.Group();
 
-      const birthYear = currentUser ? Number((currentUser.birthDate||"0000").slice(0,4)) : new Date().getFullYear();
-      const age = currentUser ? new Date().getFullYear() - birthYear : 0;
-      const workoutPlan = currentUser ? suggestWorkouts({ age, heightCm: Number(currentUser.height||170), objective: currentUser.objective||"Equilibre" }) : null;
+        const bar = new THREE.Mesh(chairGeom, chairMat);
+        bar.position.set(0, 0, 0);
 
-      // Header actions: login/logout
-      useEffect(()=>{
-        const mount = document.getElementById("header-actions");
-        if (!mount) return;
-        const btn = document.createElement("button");
-        btn.className = "btn-ghost btn";
-        btn.textContent = currentUser ? "Déconnexion" : " ";
-        btn.onclick = ()=> currentUser ? logout() : null;
-        mount.innerHTML = "";
-        if (currentUser) mount.appendChild(btn);
-      },[currentUser]);
-
-      // ---------------------- UI ----------------------
-      if (!currentUser){
-        return React.createElement("div",null,
-          React.createElement("div",{className:"card soft"},
-            React.createElement("h2",{className:"title"}, mode==="register"?"Créer un compte":"Se connecter"),
-            React.createElement("div",{className:"row"},
-              React.createElement("div",{style:{flex:1,minWidth:240}},
-                React.createElement("label",null,"Prénom"),
-                React.createElement("input",{className:"input",value:profile.firstName,onChange:e=>setProfile({...profile,firstName:e.target.value})})
-              ),
-              React.createElement("div",{style:{flex:1,minWidth:240}},
-                React.createElement("label",null,"Nom"),
-                React.createElement("input",{className:"input",value:profile.lastName,onChange:e=>setProfile({...profile,lastName:e.target.value})})
-              ),
-              React.createElement("div",{style:{flex:"1 1 100%"} },
-                React.createElement("label",null,"Date de naissance"),
-                React.createElement("input",{type:"date",className:"input",value:profile.birthDate,onChange:e=>setProfile({...profile,birthDate:e.target.value})})
-              ),
-              React.createElement("div",{style:{flex:"1 1 100%"} },
-                React.createElement("label",null,"Taille (cm)"),
-                React.createElement("input",{type:"number",className:"input",value:profile.height,onChange:e=>setProfile({...profile,height:e.target.value})})
-              ),
-              React.createElement("div",{style:{flex:"1 1 100%"} },
-                React.createElement("label",null,"Objectif"),
-                React.createElement("select",{className:"input",value:profile.objective,onChange:e=>setProfile({...profile,objective:e.target.value})},
-                  React.createElement("option",null,"Equilibre"),
-                  React.createElement("option",null,"Perte de poids"),
-                  React.createElement("option",null,"Prise de muscle"),
-                  React.createElement("option",null,"Force")
-                )
-              ),
-              React.createElement("div",{style:{flex:1,minWidth:240}},
-                React.createElement("label",null,"Email"),
-                React.createElement("input",{type:"email",className:"input",value:profile.email,onChange:e=>setProfile({...profile,email:e.target.value})})
-              ),
-              React.createElement("div",{style:{flex:1,minWidth:240}},
-                React.createElement("label",null,"Mot de passe"),
-                React.createElement("input",{type:"password",className:"input",value:profile.password,onChange:e=>setProfile({...profile,password:e.target.value})})
-              ),
-            ),
-            React.createElement("div",{style:{display:"flex",gap:10,marginTop:12}},
-              mode==="register"
-                ? React.createElement("button",{className:"btn btn-primary",onClick:register},"Créer mon compte")
-                : React.createElement("button",{className:"btn btn-primary",onClick:login},"Connexion"),
-              React.createElement("button",{className:"btn btn-ghost",onClick:()=>setMode(mode==="register"?"login":"register")},
-                "Passer à ", mode==="register"?"Connexion":"Inscription"
-              )
-            ),
-            React.createElement("div",{className:"muted",style:{marginTop:8}},"Vos données sont stockées en local (IndexedDB).")
-          )
+        const barVertical = new THREE.Mesh(
+          new THREE.BoxGeometry(0.12, 2.3, 0.12),
+          new THREE.MeshStandardMaterial({ color: 0x4b5563 })
         );
+        barVertical.position.set(0, 1.3, 0);
+
+        chairGroup.add(barVertical);
+        chairGroup.add(bar);
+
+        chairGroup.position.copy(basePos).add(new THREE.Vector3(0, 8, 0));
+        scene.add(chairGroup);
+
+        lift.chairs.push({
+          mesh: chairGroup,
+          t: t,
+          length: pathVec.length()
+        });
       }
-
-      return React.createElement("div",null,
-        React.createElement("div",{className:"card soft tabs"},
-          ["dashboard","workout","food","water","calendar"].map(t=>
-            React.createElement("button",{
-              key:t,
-              className: "tab"+(tab===t?" active":""),
-              onClick:()=>setTab(t)
-            }, t.charAt(0).toUpperCase()+t.slice(1))
-          )
-        ),
-
-        /* ---------- Dashboard ---------- */
-        tab==="dashboard" && React.createElement("div",{className:"grid-cards"},
-          React.createElement("div",{className:"card"},
-            React.createElement("div",{className:"muted"},"Âge"),
-            React.createElement("div",{className:"stat"}, age)
-          ),
-          React.createElement("div",{className:"card"},
-            React.createElement("div",{className:"muted"},"Taille (cm)"),
-            React.createElement("div",{className:"stat"}, currentUser.height || "—")
-          ),
-          React.createElement("div",{className:"card"},
-            React.createElement("div",{className:"muted"},"Calories du jour"),
-            React.createElement("div",{className:"stat"}, caloriesToday, " kcal")
-          ),
-          React.createElement("div",{className:"card"},
-            React.createElement("div",{className:"muted"},"Eau bue"),
-            React.createElement("div",{className:"stat"}, waterToday, " ml")
-          ),
-          React.createElement("div",{className:"card", style:{gridColumn:"1 / -1"}},
-            React.createElement("div",{className:"title"}, "Plan d'entraînement (IA) ", React.createElement("span",{className:"chip"}, "Niveau: ", workoutPlan?.level)),
-            React.createElement("ul",{style:{margin:0,paddingLeft:18}},
-              workoutPlan?.plan.map((w,i)=> React.createElement("li",{key:i}, w.name, " — ",
-                React.createElement("span",{className:"muted"}, w.reps)
-              ))
-            )
-          ),
-          React.createElement("div",{className:"card", style:{gridColumn:"1 / -1"}},
-            React.createElement("div",{className:"title"},"Prochains événements"),
-            React.createElement("div",{className:"list",style:{maxHeight:240,overflow:"auto"}},
-              events.slice().sort((a,b)=>a.when.localeCompare(b.when)).filter(e=>e.when >= new Date().toISOString()).slice(0,8).map(e=>
-                React.createElement("div",{key:e.id,className:"event"},
-                  React.createElement("div",null,
-                    React.createElement("div",{style:{fontWeight:600}}, e.title),
-                    React.createElement("div",{className:"muted"}, e.date, " · ", e.time)
-                  ),
-                  React.createElement("button",{className:"btn btn-ghost",onClick:()=>removeEvent(e.id)},"Supprimer")
-                )
-              ),
-              events.filter(e=>e.when >= new Date().toISOString()).length===0 && React.createElement("div",{className:"muted"},"Aucun événement à venir.")
-            )
-          )
-        ),
-
-        /* ---------- Workout ---------- */
-        tab==="workout" && React.createElement("div",{style:{display:"grid",gap:14}},
-          React.createElement("div",{className:"card soft"},
-            React.createElement("div",{className:"title"},"Recommandations d'exercices"),
-            React.createElement("div",{className:"row"},
-              React.createElement("div",{style:{minWidth:180,flex:1}},
-                React.createElement("label",null,"Objectif"),
-                React.createElement("select",{className:"input", value: currentUser.objective, onChange: async e=>{ await db.users.update(currentUser.id,{objective:e.target.value}); setCurrentUser(await db.users.get(currentUser.id)); }},
-                  React.createElement("option",null,"Equilibre"),
-                  React.createElement("option",null,"Perte de poids"),
-                  React.createElement("option",null,"Prise de muscle"),
-                  React.createElement("option",null,"Force")
-                )
-              ),
-              React.createElement("div",{style:{minWidth:180,flex:1}},
-                React.createElement("label",null,"Taille (cm)"),
-                React.createElement("input",{type:"number",className:"input", value: currentUser.height ?? "", onChange: async e=>{ const h = Number(e.target.value||0); await db.users.update(currentUser.id,{height:h}); setCurrentUser(await db.users.get(currentUser.id)); }})
-              ),
-              React.createElement("div",{style:{minWidth:180,flex:1}},
-                React.createElement("label",null,"Âge"),
-                React.createElement("input",{disabled:true,className:"input", value: age })
-              )
-            ),
-            React.createElement("ul",{style:{marginTop:12,paddingLeft:18}},
-              workoutPlan?.plan.map((w,i)=> React.createElement("li",{key:i}, w.name, " — ",
-                React.createElement("span",{className:"muted"}, w.reps)
-              ))
-            )
-          )
-        ),
-
-        /* ---------- Food ---------- */
-        tab==="food" && React.createElement("div",{className:"grid-two"},
-          React.createElement("div",{className:"card soft"},
-            React.createElement("div",{className:"title"},"Journal alimentaire"),
-            React.createElement("div",{className:"row"},
-              React.createElement("div",{style:{minWidth:220,flex:2}},
-                React.createElement("label",null,"Aliment"),
-                React.createElement("select",{className:"input", value: meal.food, onChange:e=>setMeal({...meal, food: e.target.value})},
-                  Object.keys(FOOD_DB).map(k=> React.createElement("option",{key:k,value:k}, k.replaceAll("_"," ")))
-                )
-              ),
-              React.createElement("div",{style:{minWidth:120}},
-                React.createElement("label",null,"Grammage"),
-                React.createElement("input",{type:"number",className:"input", value: meal.grams, onChange:e=>setMeal({...meal, grams: Number(e.target.value||0)})})
-              ),
-              React.createElement("div",{style:{minWidth:160}},
-                React.createElement("label",null,"Date"),
-                React.createElement("input",{type:"date",className:"input", value: selectedDate, onChange:e=>setSelectedDate(e.target.value)})
-              ),
-              React.createElement("div",{style:{alignSelf:"end"}},
-                React.createElement("button",{className:"btn btn-primary", onClick:addMeal},"Ajouter")
-              )
-            ),
-            React.createElement("div",null,
-              React.createElement("strong",null, "Repas du ", selectedDate),
-              React.createElement("div",{className:"list",style:{marginTop:8}},
-                meals.filter(m=>m.date===selectedDate).map(m=>
-                  React.createElement("div",{key:m.id,className:"event"},
-                    React.createElement("div",null,
-                      React.createElement("div",{style:{fontWeight:600}}, m.food.replaceAll("_"," ")),
-                      React.createElement("div",{className:"muted"}, m.grams, " g · ", m.calories, " kcal")
-                    ),
-                    React.createElement("button",{className:"btn btn-ghost",onClick:()=>removeMeal(m.id)},"Supprimer")
-                  )
-                ),
-                meals.filter(m=>m.date===selectedDate).length===0 && React.createElement("div",{className:"muted"},"Aucun aliment pour cette date.")
-              )
-            )
-          ),
-          React.createElement("div",{className:"card"},
-            React.createElement("div",{className:"title"},"Total calories"),
-            React.createElement("div",{className:"stat"}, caloriesToday, " kcal"),
-            React.createElement("div",{className:"muted"},"Basé sur ", Object.keys(FOOD_DB).length, " aliments.")
-          )
-        ),
-
-        /* ---------- Water ---------- */
-        tab==="water" && React.createElement("div",{className:"card soft"},
-          React.createElement("div",{className:"title"},"Hydratation"),
-          React.createElement("div",{className:"row"},
-            React.createElement("div",{style:{minWidth:160}},
-              React.createElement("label",null,"Taille du verre (ml)"),
-              React.createElement("input",{type:"number",className:"input", value: waterMl, onChange:e=>setWaterMl(Number(e.target.value||0))})
-            ),
-            React.createElement("div",{style:{minWidth:160}},
-              React.createElement("label",null,"Date"),
-              React.createElement("input",{type:"date",className:"input", value: selectedDate, onChange:e=>setSelectedDate(e.target.value)})
-            ),
-            React.createElement("div",{style:{alignSelf:"end"}},
-              React.createElement("button",{className:"btn btn-primary", onClick:addWater},"Ajouter un verre")
-            )
-          ),
-          React.createElement("div",{style:{marginTop:12,display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px,1fr))",gap:12}},
-            React.createElement("div",{className:"card"},
-              React.createElement("div",{className:"muted"},"Total du ", selectedDate),
-              React.createElement("div",{className:"stat"}, waterToday, " ml")
-            )
-          )
-        ),
-
-        /* ---------- Calendar ---------- */
-        tab==="calendar" && React.createElement("div",{className:"grid-two"},
-          React.createElement("div",{className:"card soft"},
-            React.createElement("div",{className:"title"},"Calendrier"),
-            React.createElement("div",{className:"row"},
-              React.createElement("div",{style:{minWidth:220,flex:2}},
-                React.createElement("label",null,"Titre"),
-                React.createElement("input",{className:"input", value: eventDraft.title, onChange:e=>setEventDraft({...eventDraft, title:e.target.value})})
-              ),
-              React.createElement("div",null,
-                React.createElement("label",null,"Date"),
-                React.createElement("input",{type:"date",className:"input", value: eventDraft.date, onChange:e=>setEventDraft({...eventDraft,date:e.target.value})})
-              ),
-              React.createElement("div",null,
-                React.createElement("label",null,"Heure"),
-                React.createElement("input",{type:"time",className:"input", value: eventDraft.time, onChange:e=>setEventDraft({...eventDraft,time:e.target.value})})
-              ),
-              React.createElement("div",{style:{alignSelf:"end"}},
-                React.createElement("button",{className:"btn btn-primary", onClick:addEvent},"Ajouter")
-              ),
-              React.createElement("div",{style:{flex:"1 1 100%"} },
-                React.createElement("label",null,"Description"),
-                React.createElement("textarea",{className:"input", style:{height:70,resize:"vertical"}, value: eventDraft.description, onChange:e=>setEventDraft({...eventDraft, description:e.target.value})})
-              )
-            ),
-            React.createElement("div",{className:"grid-responsive", style:{marginTop:12}},
-              Object.keys(eventsByDate).sort().map(date=>
-                React.createElement("div",{key:date,className:"card"},
-                  React.createElement("div",{style:{fontWeight:600,marginBottom:6}}, date),
-                  React.createElement("div",{className:"list"},
-                    eventsByDate[date].map(e=>
-                      React.createElement("div",{key:e.id,className:"event"},
-                        React.createElement("div",null,
-                          React.createElement("div",{style:{fontWeight:600}}, e.title, " ",
-                            React.createElement("span",{className:"muted"}, "· ", e.time)
-                          ),
-                          e.description && React.createElement("div",{className:"muted"}, e.description)
-                        ),
-                        React.createElement("button",{className:"btn btn-ghost", onClick:()=>removeEvent(e.id)},"Supprimer")
-                      )
-                    )
-                  )
-                )
-              ),
-              Object.keys(eventsByDate).length===0 && React.createElement("div",{className:"muted"},"Aucun événement pour l'instant.")
-            )
-          ),
-          React.createElement("div",{className:"card"},
-            React.createElement("div",{className:"title"},"Profil"),
-            React.createElement("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}},
-              React.createElement("div",null,
-                React.createElement("label",null,"Prénom"),
-                React.createElement("input",{className:"input", value: currentUser.firstName, onChange: async e=>{ await db.users.update(currentUser.id,{ firstName:e.target.value }); setCurrentUser(await db.users.get(currentUser.id)); }})
-              ),
-              React.createElement("div",null,
-                React.createElement("label",null,"Nom"),
-                React.createElement("input",{className:"input", value: currentUser.lastName, onChange: async e=>{ await db.users.update(currentUser.id,{ lastName:e.target.value }); setCurrentUser(await db.users.get(currentUser.id)); }})
-              ),
-              React.createElement("div",{style:{gridColumn:"1 / -1"}},
-                React.createElement("label",null,"Date de naissance"),
-                React.createElement("input",{type:"date",className:"input", value: currentUser.birthDate, onChange: async e=>{ await db.users.update(currentUser.id,{ birthDate:e.target.value }); setCurrentUser(await db.users.get(currentUser.id)); }})
-              ),
-              React.createElement("div",{style:{gridColumn:"1 / -1"}},
-                React.createElement("label",null,"Email"),
-                React.createElement("input",{type:"email",className:"input", value: currentUser.email, onChange: async e=>{ await db.users.update(currentUser.id,{ email:e.target.value }); setCurrentUser(await db.users.get(currentUser.id)); }})
-              )
-            )
-          )
-        )
-      );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(React.createElement(App));
-  })();
+    function updateLifts(delta) {
+      Object.keys(lifts).forEach((key) => {
+        const lift = lifts[key];
+        const dir = new THREE.Vector3().subVectors(lift.pathEnd, lift.pathStart).normalize();
+
+        lift.chairs.forEach((chair) => {
+          const travel = (chair.t * chair.length + delta * lift.speed) % chair.length;
+          chair.t = travel / chair.length;
+
+          const pos = new THREE.Vector3().copy(lift.pathStart).addScaledVector(dir, travel);
+          chair.mesh.position.set(pos.x, pos.y + 8, pos.z);
+
+          // Si joueur sur la remontée -> accroché à un siège
+          if (playerState.onLift && playerState.currentLift === key) {
+            if (pos.y < 10 && pos.z > -20) {
+              skierGroup.position.set(pos.x, pos.y + 1.5, pos.z);
+              playerState.velocity.set(0, 0, 0);
+            }
+          }
+        });
+      });
+    }
+
+    // ==========================
+    //          SKIEUR
+    // ==========================
+    function createSkier() {
+      skierGroup = new THREE.Group();
+
+      // Corps
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8 });
+      const body = new THREE.Mesh(
+        new THREE.CapsuleGeometry(0.5, 1.8, 4, 8),
+        bodyMat
+      );
+      body.position.y = 2.2;
+      skierGroup.add(body);
+
+      // Tête
+      const headMat = new THREE.MeshStandardMaterial({ color: 0xfacc15 });
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.45, 16, 16),
+        headMat
+      );
+      head.position.y = 3.4;
+      skierGroup.add(head);
+
+      // Skis
+      const skiMat = new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.2, roughness: 0.4 });
+      const skiGeom = new THREE.BoxGeometry(1.2, 0.08, 3.4);
+
+      const skiLeft = new THREE.Mesh(skiGeom, skiMat);
+      skiLeft.position.set(-0.35, 1.05, 0.2);
+      skierGroup.add(skiLeft);
+
+      const skiRight = skiLeft.clone();
+      skiRight.position.set(0.35, 1.05, -0.2);
+      skierGroup.add(skiRight);
+
+      skierGroup.position.set(0, 1.2, 8);
+      scene.add(skierGroup);
+      skier = skierGroup;
+
+      // Sauver les matériaux pour le shop
+      skierMaterials.body = bodyMat;
+      skierMaterials.head = headMat;
+      skierMaterials.skis = skiMat.clone();
+    }
+
+    function updateSkier(delta) {
+      // Gestion chute
+      if (playerState.fallen) {
+        playerState.fallTimer -= delta;
+        // animation simple de roulade
+        skierGroup.rotation.z += 6 * delta;
+        if (playerState.fallTimer <= 0) {
+          // respawn
+          playerState.fallen = false;
+          skierGroup.rotation.set(0, skierGroup.rotation.y, 0);
+          skierGroup.position.copy(playerState.lastSafePos);
+          fallInfo.style.display = 'none';
+        }
+        speedInfo.textContent = "0.0";
+        return;
+      }
+
+      const inputX = joystick.valueX;
+      const inputY = -joystick.valueY;
+
+      const inputMagnitude = Math.min(Math.sqrt(inputX * inputX + inputY * inputY), 1);
+      let inputDir = new THREE.Vector3(0, 0, 0);
+
+      if (inputMagnitude > 0.05) {
+        inputDir.set(inputX, 0, -inputY).normalize();
+
+        const targetAngle = Math.atan2(inputDir.x, inputDir.z);
+        const currentAngle = skierGroup.rotation.y;
+        const angleDiff = targetAngle - currentAngle;
+        skierGroup.rotation.y += angleDiff * 8 * delta;
+      }
+
+      if (!playerState.onLift) {
+        if (inputMagnitude > 0.05) {
+          const accel = inputDir.multiplyScalar(playerState.acceleration * inputMagnitude * delta);
+          playerState.velocity.add(accel);
+        }
+
+        playerState.velocity.z -= playerState.gravitySlope * delta;
+
+        const horizontalVel = new THREE.Vector3(playerState.velocity.x, 0, playerState.velocity.z);
+        const speed = horizontalVel.length();
+        if (speed > 0) {
+          const frictionForce = Math.min(playerState.friction * delta, speed);
+          horizontalVel.addScaledVector(horizontalVel.clone().normalize(), -frictionForce);
+          playerState.velocity.x = horizontalVel.x;
+          playerState.velocity.z = horizontalVel.z;
+        }
+
+        const newSpeed = horizontalVel.length();
+        if (newSpeed > playerState.maxSpeed) {
+          horizontalVel.setLength(playerState.maxSpeed);
+          playerState.velocity.x = horizontalVel.x;
+          playerState.velocity.z = horizontalVel.z;
+        }
+
+        skierGroup.position.addScaledVector(playerState.velocity, delta);
+
+        const ySnow = getHeightOnWorld(skierGroup.position.x, skierGroup.position.z);
+        skierGroup.position.y = ySnow + 1.2;
+
+        // Mémoriser une position safe (pas trop raide)
+        if (skierGroup.position.z > -450) {
+          playerState.lastSafePos.copy(skierGroup.position);
+        }
+      }
+
+      if (skierGroup.position.z < -500) {
+        skierGroup.position.set(0, 30, -260);
+        playerState.velocity.set(0, 0, 5);
+      }
+
+      const displayedSpeed = playerState.onLift
+        ? 0
+        : new THREE.Vector3(playerState.velocity.x, 0, playerState.velocity.z).length();
+      speedInfo.textContent = displayedSpeed.toFixed(1);
+
+      if (!playerState.onLift && distance2D(skierGroup.position, new THREE.Vector3(-30, 0, 18)) < 6) {
+        queueInfo.textContent = "File Aiguille";
+      } else if (!playerState.onLift && distance2D(skierGroup.position, new THREE.Vector3(30, 0, 18)) < 7) {
+        queueInfo.textContent = "File Chaux";
+      } else {
+        queueInfo.textContent = "bas des pistes";
+      }
+
+      if (playerState.onLift && skierGroup.position.y > 38) {
+        playerState.onLift = false;
+        playerState.currentLift = null;
+        liftInfo.textContent = "aucune";
+        playerState.velocity.set(0, 0, -6);
+      }
+    }
+
+    function distance2D(a, b) {
+      const dx = a.x - b.x;
+      const dz = a.z - b.z;
+      return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    function getHeightOnWorld(x, z) {
+      if (!worldPlane) return 0;
+      const local = new THREE.Vector3(x, 0, z).sub(worldPlane.position);
+      const geom = worldPlane.geometry;
+      const pos = geom.attributes.position;
+
+      const widthSegments = 40;
+      const heightSegments = 60;
+      const width = 400;
+      const height = 600;
+
+      const halfW = width / 2;
+      const halfH = height / 2;
+
+      const u = (local.x + halfW) / width;
+      const v = (local.z + halfH) / height;
+
+      const i = Math.floor(u * widthSegments);
+      const j = Math.floor(v * heightSegments);
+
+      const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+      const ii = clamp(i, 0, widthSegments - 1);
+      const jj = clamp(j, 0, heightSegments - 1);
+
+      const index = jj * (widthSegments + 1) + ii;
+
+      const y = pos.getY(index);
+      return y;
+    }
+
+    // ==========================
+    //           BOTS
+    // ==========================
+    function createBots() {
+      const colors = [0x10b981, 0xec4899, 0xf97316, 0x6366f1, 0x22c55e, 0x0ea5e9];
+
+      for (let i = 0; i < BOT_COUNT; i++) {
+        const group = new THREE.Group();
+
+        const body = new THREE.Mesh(
+          new THREE.CapsuleGeometry(0.4, 1.4, 4, 8),
+          new THREE.MeshStandardMaterial({ color: colors[i % colors.length] })
+        );
+        body.position.y = 1.9;
+        group.add(body);
+
+        const head = new THREE.Mesh(
+          new THREE.SphereGeometry(0.35, 14, 14),
+          new THREE.MeshStandardMaterial({ color: 0xfff3c4 })
+        );
+        head.position.y = 2.9;
+        group.add(head);
+
+        const skiMat = new THREE.MeshStandardMaterial({ color: 0x111827 });
+        const skiGeom = new THREE.BoxGeometry(1, 0.06, 2.8);
+        const skiL = new THREE.Mesh(skiGeom, skiMat);
+        skiL.position.set(-0.3, 0.9, 0.15);
+        group.add(skiL);
+        const skiR = skiL.clone();
+        skiR.position.set(0.3, 0.9, -0.15);
+        group.add(skiR);
+
+        scene.add(group);
+
+        const startX = (Math.random() - 0.5) * 60;
+        const startZ = -100 - Math.random() * 280;
+        group.position.set(startX, 5, startZ);
+
+        const speed = 8 + Math.random() * 14;
+        const drift = (Math.random() - 0.5) * 6;
+
+        bots.push({
+          mesh: group,
+          speed,
+          drift,
+          offsetPhase: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    function updateBots(delta) {
+      const t = clock.getElapsedTime();
+
+      bots.forEach(bot => {
+        const pos = bot.mesh.position;
+        pos.z -= bot.speed * delta;
+
+        pos.x += Math.sin(t * 0.7 + bot.offsetPhase) * bot.drift * delta;
+
+        // Éviter un peu le joueur
+        const d = distance2D(pos, skierGroup.position);
+        if (d < 6) {
+          const dirAway = new THREE.Vector3(
+            pos.x - skierGroup.position.x,
+            0,
+            pos.z - skierGroup.position.z
+          ).normalize();
+          pos.x += dirAway.x * 4 * delta;
+          pos.z += dirAway.z * 4 * delta;
+        }
+
+        const ySnow = getHeightOnWorld(pos.x, pos.z);
+        bot.mesh.position.y = ySnow + 1;
+
+        if (pos.z < -520) {
+          pos.z = -120 + Math.random() * -240;
+          pos.x = (Math.random() - 0.5) * 80;
+        }
+
+        bot.mesh.rotation.y = Math.atan2(0, -bot.speed);
+      });
+    }
+
+    // ==========================
+    //          CAMERA
+    // ==========================
+    function updateCamera(delta) {
+      const offsetBehind = 10;
+      const offsetUp = 6;
+
+      const dir = new THREE.Vector3(0, 0, -1).applyAxisAngle(
+        new THREE.Vector3(0,1,0),
+        skierGroup.rotation.y
+      );
+
+      const targetPos = new THREE.Vector3().copy(skierGroup.position)
+        .addScaledVector(dir, -offsetBehind)
+        .add(new THREE.Vector3(0, offsetUp, 0));
+
+      camera.position.lerp(targetPos, 4 * delta);
+      camera.lookAt(skierGroup.position.x, skierGroup.position.y + 2, skierGroup.position.z);
+    }
+
+    // ==========================
+    //          JOYSTICK
+    // ==========================
+    function setupJoystick() {
+      function getPoint(e) {
+        if (e.touches && e.touches.length > 0) {
+          return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+      }
+
+      const baseRect = () => joystickBase.getBoundingClientRect();
+
+      const start = (e) => {
+        e.preventDefault();
+        joystick.active = true;
+        const rect = baseRect();
+        joystick.baseX = rect.left + rect.width / 2;
+        joystick.baseY = rect.top + rect.height / 2;
+        const p = getPoint(e);
+        updateStick(p.x, p.y);
+      };
+
+      const move = (e) => {
+        if (!joystick.active) return;
+        e.preventDefault();
+        const p = getPoint(e);
+        updateStick(p.x, p.y);
+      };
+
+      const end = (e) => {
+        joystick.active = false;
+        joystick.valueX = 0;
+        joystick.valueY = 0;
+        joystickStick.style.transform = `translate(0px, 0px)`;
+      };
+
+      function updateStick(px, py) {
+        const dx = px - joystick.baseX;
+        const dy = py - joystick.baseY;
+        const maxRadius = 60;
+        const dist = Math.min(Math.sqrt(dx * dx + dy * dy), maxRadius);
+        const angle = Math.atan2(dy, dx);
+        const nx = Math.cos(angle) * dist;
+        const ny = Math.sin(angle) * dist;
+
+        joystickStick.style.transform = `translate(${nx}px, ${ny}px)`;
+        joystick.valueX = nx / maxRadius;
+        joystick.valueY = ny / maxRadius;
+      }
+
+      joystickBase.addEventListener('touchstart', start, { passive: false });
+      joystickBase.addEventListener('touchmove', move, { passive: false });
+      joystickBase.addEventListener('touchend', end, { passive: false });
+      joystickBase.addEventListener('touchcancel', end, { passive: false });
+
+      joystickBase.addEventListener('mousedown', start);
+      window.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', end);
+    }
+
+    // ==========================
+    //            UI
+    // ==========================
+    function setupUI() {
+      btnAiguille.addEventListener('click', () => {
+        takeLift('aiguille');
+      });
+      btnChaux.addEventListener('click', () => {
+        takeLift('chaux');
+      });
+
+      // Météo
+      btnWeather.addEventListener('click', () => {
+        if (weatherState.mode === 'sunny') setWeather('snow');
+        else if (weatherState.mode === 'snow') setWeather('foggy');
+        else setWeather('sunny');
+      });
+
+      // Shop
+      btnShop.addEventListener('click', () => {
+        shopPanel.style.display = 'flex';
+        shopOverlay.style.pointerEvents = 'auto';
+      });
+
+      shopClose.addEventListener('click', () => {
+        shopPanel.style.display = 'none';
+        shopOverlay.style.pointerEvents = 'none';
+      });
+
+      shopOverlay.addEventListener('click', (e) => {
+        if (e.target === shopOverlay) {
+          shopPanel.style.display = 'none';
+          shopOverlay.style.pointerEvents = 'none';
+        }
+      });
+
+      const shopItems = shopPanel.querySelectorAll('.shop-item');
+      shopItems.forEach(item => {
+        item.addEventListener('click', () => {
+          const style = item.getAttribute('data-style');
+          applyOutfit(style);
+        });
+      });
+    }
+
+    function takeLift(name) {
+      playerState.onLift = true;
+      playerState.currentLift = name;
+      playerState.velocity.set(0, 0, 0);
+
+      liftInfo.textContent = name === 'aiguille'
+        ? 'Aiguille (3 places)'
+        : 'Chaux (6 places)';
+
+      btnAiguille.classList.toggle('active', name === 'aiguille');
+      btnChaux.classList.toggle('active', name === 'chaux');
+
+      if (name === 'aiguille') {
+        skierGroup.position.set(-30, 1.2, 18);
+      } else {
+        skierGroup.position.set(30, 1.2, 18);
+      }
+    }
+
+    // ==========================
+    //          MÉTÉO
+    // ==========================
+    function setWeather(mode) {
+      weatherState.mode = mode;
+      weatherInfo.textContent = mode === 'sunny' ? 'soleil' : mode === 'snow' ? 'neige' : 'brouillard';
+
+      if (weatherState.snowGroup) {
+        scene.remove(weatherState.snowGroup);
+        weatherState.snowGroup = null;
+      }
+
+      if (mode === 'sunny') {
+        scene.background = new THREE.Color(0x9fd8ff);
+        scene.fog.color.set(0x9fd8ff);
+        scene.fog.near = 60;
+        scene.fog.far = 400;
+        hemiLight.intensity = 1.0;
+        dirLight.intensity = 0.9;
+      } else if (mode === 'snow') {
+        scene.background = new THREE.Color(0xbcd7f5);
+        scene.fog.color.set(0xbcd7f5);
+        scene.fog.near = 40;
+        scene.fog.far = 260;
+        hemiLight.intensity = 0.9;
+        dirLight.intensity = 0.7;
+        createSnowParticles();
+      } else if (mode === 'foggy') {
+        scene.background = new THREE.Color(0xcbd5f5);
+        scene.fog.color.set(0xcbd5f5);
+        scene.fog.near = 20;
+        scene.fog.far = 140;
+        hemiLight.intensity = 0.7;
+        dirLight.intensity = 0.5;
+      }
+    }
+
+    function createSnowParticles() {
+      const count = 800;
+      const positions = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        positions[i * 3 + 0] = (Math.random() - 0.5) * 120;
+        positions[i * 3 + 1] = 10 + Math.random() * 40;
+        positions[i * 3 + 2] = -80 - Math.random() * 260;
+      }
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({
+        size: 0.25,
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.8
+      });
+      const points = new THREE.Points(geom, mat);
+      weatherState.snowGroup = points;
+      scene.add(points);
+    }
+
+    function updateSnow(delta) {
+      if (!weatherState.snowGroup) return;
+      const pos = weatherState.snowGroup.geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        let y = pos.getY(i);
+        let z = pos.getZ(i);
+        y -= 5 * delta;
+        z += 1.2 * delta;
+        if (y < 0) y = 40;
+        if (z > -60) z = -260 - Math.random() * 80;
+        pos.setY(i, y);
+        pos.setZ(i, z);
+      }
+      pos.needsUpdate = true;
+    }
+
+    // ==========================
+    //           SHOP
+    // ==========================
+    function applyOutfit(style) {
+      if (!skierMaterials.body || !skierMaterials.head) return;
+      if (style === 'blue') {
+        skierMaterials.body.color.setHex(0x1d4ed8);
+        skierMaterials.head.color.setHex(0xfacc15);
+      } else if (style === 'red') {
+        skierMaterials.body.color.setHex(0xb91c1c);
+        skierMaterials.head.color.setHex(0xfbbf24);
+      } else if (style === 'green') {
+        skierMaterials.body.color.setHex(0x047857);
+        skierMaterials.head.color.setHex(0xfef3c7);
+      }
+    }
+
+    // ==========================
+    //        COLLISIONS
+    // ==========================
+    function checkCollisions() {
+      if (playerState.onLift || playerState.fallen) return;
+
+      const playerPos = skierGroup.position;
+      const playerRadius = 0.9;
+
+      for (let i = 0; i < obstacles.length; i++) {
+        const o = obstacles[i];
+        const pos = o.mesh.position;
+        const dx = playerPos.x - pos.x;
+        const dz = playerPos.z - pos.z;
+        const distSq = dx * dx + dz * dz;
+        const r = playerRadius + o.radius;
+        if (distSq < r * r) {
+          triggerFall();
+          break;
+        }
+      }
+    }
+
+    function triggerFall() {
+      if (playerState.fallen) return;
+      playerState.fallen = true;
+      playerState.fallTimer = 2.2;
+      playerState.velocity.set(0, 0, 0);
+      fallInfo.style.display = 'block';
+    }
+
+    // ==========================
+    //         MINIMAP
+    // ==========================
+    function updateMinimap() {
+      if (!mmCtx) return;
+      const w = minimapCanvas.width;
+      const h = minimapCanvas.height;
+
+      mmCtx.clearRect(0, 0, w, h);
+
+      // Fond
+      mmCtx.fillStyle = 'rgba(15,23,42,0.9)';
+      mmCtx.fillRect(0, 0, w, h);
+
+      // Montagne (zone jouable)
+      mmCtx.strokeStyle = 'rgba(148,163,184,0.9)';
+      mmCtx.lineWidth = 1;
+      mmCtx.strokeRect(8, 8, w - 16, h - 16);
+
+      // Conversion monde -> minimap
+      const worldXMin = -120, worldXMax = 120;
+      const worldZMin = -520, worldZMax = 40;
+
+      const mapX = (x) => {
+        const t = (x - worldXMin) / (worldXMax - worldXMin);
+        return 8 + t * (w - 16);
+      };
+      const mapY = (z) => {
+        const t = (z - worldZMin) / (worldZMax - worldZMin);
+        return 8 + (1 - t) * (h - 16); // inverser pour que le bas de station soit en haut
+      };
+
+      // Pistes principales (juste quelques lignes verticales symboliques)
+      mmCtx.strokeStyle = 'rgba(59,130,246,0.6)';
+      mmCtx.beginPath();
+      mmCtx.moveTo(mapX(-5), mapY(-40));
+      mmCtx.lineTo(mapX(-5), mapY(-400));
+      mmCtx.stroke();
+
+      mmCtx.strokeStyle = 'rgba(239,68,68,0.6)';
+      mmCtx.beginPath();
+      mmCtx.moveTo(mapX(10), mapY(-40));
+      mmCtx.lineTo(mapX(10), mapY(-420));
+      mmCtx.stroke();
+
+      // Joueur
+      const px = mapX(skierGroup.position.x);
+      const py = mapY(skierGroup.position.z);
+      mmCtx.fillStyle = '#facc15';
+      mmCtx.beginPath();
+      mmCtx.arc(px, py, 4, 0, Math.PI * 2);
+      mmCtx.fill();
+
+      // Bots
+      mmCtx.fillStyle = '#60a5fa';
+      bots.forEach(bot => {
+        const bx = mapX(bot.mesh.position.x);
+        const by = mapY(bot.mesh.position.z);
+        mmCtx.beginPath();
+        mmCtx.arc(bx, by, 2, 0, Math.PI * 2);
+        mmCtx.fill();
+      });
+    }
+
+    // ==========================
+    //       BOUCLE PRINCIPALE
+    // ==========================
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+
+      updateLifts(delta);
+      updateSkier(delta);
+      updateBots(delta);
+      updateCamera(delta);
+      checkCollisions();
+      updateSnow(delta);
+      updateMinimap();
+
+      renderer.render(scene, camera);
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
   </script>
 </body>
 </html>
